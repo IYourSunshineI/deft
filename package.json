@@ -6,6 +6,10 @@
   "publisher": "IYourSunshineI",
   "license": "MIT",
   "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:cpp"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },
