@@ -58,6 +58,7 @@ test('malformed rows are errors, not exceptions', () => {
   assert.deepEqual(d.errors.map(e => e.line), [0, 1, 2, 3]);
   assert.match(d.errors[0].message, /string/);
   assert.match(d.errors[1].message, /Unterminated row/);
+  assert.equal(d.errors[3].warning, true);
   assert.equal(d.rows.length, 1);
 });
 

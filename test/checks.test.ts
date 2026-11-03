@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { parse } from '../src/parser.ts';
 import { check } from '../src/checks.ts';
 import type { ReadFile } from '../src/checks.ts';
-import { locate, outline } from '../src/navigate.ts';
+import { describe, locate, outline } from '../src/navigate.ts';
 import { schema, fx, fxDir, defsIn, readFile, extraFiles } from './schema.ts';
 
 const msgs = (t: string, o = {}) => check(parse(t, schema), o).map(d => d.message);
@@ -76,6 +76,7 @@ test('column type, range, arity, parse errors', () => {
   one('LOG_GROUP_DEF(0x1, A)', /decimal/);
   one(G + 'LOG_DEF(0x0101, BAD, U32, X, "a")', /Expected one of/);
   one('LOG_DEF(1, A, "x', /Unterminated string/);
+  assert.deepEqual(check(parse('foo bar', schema)).map(x => x.severity), ['warning']);
 });
 
 test('locate: row, column, placeholder', () => {
@@ -100,4 +101,12 @@ test('outline: groups, high byte, enum options', () => {
   assert.deepEqual(cfg[1].children.map(n => n.label), ['LOG_LEVEL']);
   assert.equal(cfg[1].children[0].children.length, 3);
   assert.equal(outline(parse(fx('config/tables/channels.def'), schema)).length, 3);
+});
+
+test('describe: hover text', () => {
+  const t = 'LOG_DEF(0x0101, X, "a {0} b")';
+  const doc = parse(t, schema);
+  assert.match(describe(locate(doc, 0, 2)!), /^`LOG_DEF\(code, name, text/);
+  assert.match(describe(locate(doc, 0, 10)!), /column `code` of `LOG_DEF`/);
+  assert.match(describe(locate(doc, 0, t.indexOf('{0') + 1)!), /placeholder: argument 0/);
 });

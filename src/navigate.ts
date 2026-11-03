@@ -65,3 +65,17 @@ export function outline(doc: ParsedDoc): OutlineNode[] {
   }
   return roots;
 }
+
+/** Markdown hover text for a located position. */
+export function describe(l: Located): string {
+  const { row } = l;
+  if (l.arg) {
+    let t = l.column ? `column \`${l.column}\` of \`${row.macro}\`` : `argument of \`${row.macro}\``;
+    if (l.placeholder) t += `
+
+placeholder: argument ${l.placeholder.index}`;
+    return t;
+  }
+  const layouts = row.spec?.layouts.map(c => c.join(', ')).join(' | ');
+  return layouts ? `\`${row.macro}(${layouts})\`` : `\`${row.macro}\`: unknown macro`;
+}

@@ -58,7 +58,7 @@ export function check(doc: ParsedDoc, opts: CheckOptions = {}): Diagnostic[] {
   const out: Diagnostic[] = [];
   const add = (line: number, start: number, end: number, message: string, severity: Diagnostic['severity'] = 'error') =>
     out.push({ line, start, end, severity, message });
-  for (const e of doc.errors) add(e.line, e.start, e.end, e.message);
+  for (const e of doc.errors) add(e.line, e.start, e.end, e.message, e.warning ? 'warning' : 'error');
 
   // Known definitions, seeded with the rows of the included files (one level only).
   const known = new Map<string, string>(); // slot -> where

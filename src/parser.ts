@@ -44,7 +44,7 @@ export interface Row {
   /** true when the argument count matches one of the spec's layouts */
   mapped: boolean;
 }
-export interface ParseError { line: number; start: number; end: number; message: string }
+export interface ParseError { line: number; start: number; end: number; message: string; warning?: boolean }
 export interface Include { line: number; path: string; start: number; end: number }
 export interface Define { line: number; name: string; value: string; start: number; end: number }
 export interface ParsedDoc {
@@ -94,7 +94,7 @@ export function parse(text: string, schema: Schema): ParsedDoc {
       return;
     }
     if (!(m = /^([A-Za-z_]\w*)\s*\(/.exec(rest))) {
-      err(i, line.length, 'Unexpected text: expected a table row, directive or comment');
+      doc.errors.push({ line: ln, start: i, end: line.length, warning: true, message: 'Unexpected text: expected a table row, directive or comment (ignored)' });
       return;
     }
     const macro = m[1], macroStart = i, macroEnd = i + macro.length, open = i + m[0].length - 1;
