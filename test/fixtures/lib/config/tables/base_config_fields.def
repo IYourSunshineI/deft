@@ -1,0 +1,33 @@
+/**********************************************************************************
+ * Synthetic test fixture: the shared part of a demo device configuration table.
+ **********************************************************************************/
+
+/*
+ * Settings owned by the shared library. A product table includes this file with a
+ * path relative to itself:
+ *
+ *     #include "../../lib/config/tables/base_config_fields.def"
+ *
+ * A reader follows exactly one #include level and rejects an id, name or group id
+ * that is defined in both files.
+ *
+ * Ownership:
+ *   - Group ids 0 to 15 belong to the library, written in decimal.
+ *   - Field ids 0x0001 to 0x0FFF belong to the library, products use 0x1000 up.
+ */
+
+#define BASE_CONFIG_TABLE_VERSION 1
+
+/*               id  name    label */
+CONFIG_GROUP_DEF(0,  UNIT,   "Unit")
+CONFIG_GROUP_DEF(1,  TRACE,  "Tracing")
+
+/*            id      name             group  default  max  label */
+CONFIG_TEXT  (0x0001, UNIT_LABEL,      0,     "",      32,  "Unit label")
+CONFIG_TEXT  (0x0002, DEVICE_PLACE,    0,     "",      64,  "Place")
+
+/*            id      name             group  default  label */
+CONFIG_ENUM  (0x0101, LOG_LEVEL,       1,     INFO,    "Lowest level that is kept")
+CONFIG_OPTION(LOG_LEVEL, 0, DEBUG,   "Debug")
+CONFIG_OPTION(LOG_LEVEL, 1, INFO,    "Info")
+CONFIG_OPTION(LOG_LEVEL, 2, ERROR,   "Error")

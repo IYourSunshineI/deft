@@ -1,0 +1,22 @@
+/**********************************************************************************
+ * Synthetic test fixture: the shared part of a demo device log catalog.
+ **********************************************************************************/
+
+/*
+ * Events of the shared library; a product table includes this file with a relative
+ * path. Group ids 0 to 5 belong to the library, products start at 6, in decimal.
+ * Codes follow their group in the high byte; 0x0000 is never a row.
+ */
+
+#ifndef BASE_CATALOG_VERSION
+#define BASE_CATALOG_VERSION 1
+#endif
+
+/*            id  name */
+LOG_GROUP_DEF(0,  CORE)
+LOG_GROUP_DEF(1,  BOOT)
+
+/*      code    name                 text */
+LOG_DEF(0x0001, CORE_STARTED,        "started, catalog v{0}, library catalog v{1}")
+LOG_DEF(0x0002, CORE_DROPPED,        "{0} records dropped, queue full")
+LOG_DEF(0x0101, BOOT_CAUSE,          "reset 0x{0:X8}, detail 0x{1:X2} ({2} = none, {3} = fault)")

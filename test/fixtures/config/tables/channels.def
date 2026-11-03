@@ -1,0 +1,18 @@
+/**********************************************************************************
+ * Synthetic test fixture: transport table, one row per channel.
+ **********************************************************************************/
+
+/*
+ * Included repeatedly with CHANNEL_DEF defined differently each time. Rows whose
+ * guard is 0 expand to nothing.
+ *
+ * Columns:
+ *   guard  Module flag that decides whether the row exists
+ *   name   Channel name, used to build identifiers
+ *   depth  Frames the queue holds
+ */
+
+/*          guard            name       depth */
+CHANNEL_DEF(MODULE_SCREEN,   Screen,    4)
+CHANNEL_DEF(MODULE_RADIO,    Radio,     4)
+CHANNEL_DEF(MODULE_PATCH,    Patch,     2)

@@ -1,0 +1,61 @@
+{
+  "scopeName": "source.xmacro-def",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#preprocessor" },
+    { "include": "#row" }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        { "name": "comment.block.xmacro-def", "begin": "/\\*", "end": "\\*/" },
+        { "name": "comment.line.double-slash.xmacro-def", "match": "//.*$" }
+      ]
+    },
+    "preprocessor": {
+      "match": "^\\s*(#\\s*(?:define|undef|ifdef|ifndef|if|elif|else|endif|include|pragma))\\b(?:\\s+([A-Za-z_]\\w*))?(.*)$",
+      "captures": {
+        "1": { "name": "keyword.control.directive.xmacro-def" },
+        "2": { "name": "entity.name.function.preprocessor.xmacro-def" },
+        "3": { "patterns": [ { "include": "#comment" }, { "include": "#string" }, { "include": "#number" }, { "include": "#name" } ] }
+      }
+    },
+    "row": {
+      "begin": "^\\s*([A-Z][A-Z0-9_]*)\\s*(\\()",
+      "beginCaptures": {
+        "1": { "name": "entity.name.function.preprocessor.xmacro-def" },
+        "2": { "name": "punctuation.section.arguments.begin.xmacro-def" }
+      },
+      "end": "(\\))|$",
+      "endCaptures": { "1": { "name": "punctuation.section.arguments.end.xmacro-def" } },
+      "patterns": [
+        { "match": "\\G\\s*(0[xX][0-9A-Fa-f]+|\\d+)", "captures": { "1": { "name": "constant.numeric.id.xmacro-def" } } },
+        { "include": "#comment" },
+        { "include": "#tuple" },
+        { "include": "#string" },
+        { "include": "#number" },
+        { "include": "#name" }
+      ]
+    },
+    "tuple": {
+      "begin": "\\(", "end": "\\)|$",
+      "name": "meta.tuple.xmacro-def",
+      "patterns": [
+        { "include": "#tuple" },
+        { "include": "#string" },
+        { "include": "#number" },
+        { "include": "#name" }
+      ]
+    },
+    "string": {
+      "name": "string.quoted.double.xmacro-def",
+      "begin": "\"", "end": "\"|$",
+      "patterns": [
+        { "name": "constant.character.escape.xmacro-def", "match": "\\\\.|\\{\\{|\\}\\}" },
+        { "name": "constant.other.placeholder.xmacro-def", "match": "\\{\\d+(?:,-?\\d+)?(?::[^}\"]*)?\\}" }
+      ]
+    },
+    "number": { "name": "constant.numeric.xmacro-def", "match": "(?<![\\w.])-?(?:0[xX][0-9A-Fa-f]+|\\d+)\\b" },
+    "name":   { "name": "variable.other.constant.xmacro-def", "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b" }
+  }
+}

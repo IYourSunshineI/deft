@@ -1,0 +1,32 @@
+/**********************************************************************************
+ * Synthetic test fixture: configuration table of a fictional demo device.
+ **********************************************************************************/
+
+/*
+ * Rules:
+ *   - One row per line; a reader parses each row with a regular expression.
+ *   - Ids are never reused, and a field never changes its type.
+ *   - Bump DEMO_CONFIG_TABLE_VERSION with every change to a row.
+ *   - Groups from 16, ids from 0x1000. Rule ids from 0x1000 as well.
+ */
+
+#define DEMO_CONFIG_TABLE_VERSION 1
+
+#include "../../lib/config/tables/base_config_fields.def"
+
+/*               id  name    label */
+CONFIG_GROUP_DEF(16, NETWORK, "Network")   // trailing comment
+CONFIG_GROUP_DEF(17, TIMING,  "Timing")
+
+/*            id      name              group  default              min  max     label */
+CONFIG_BOOL  (0x1001, NET_AUTO,         16,    1,                                "Take the address automatically; \"fixed\" is the fallback")
+CONFIG_IPV4  (0x1002, NET_FIXED_IP,     16,    (192, 0, 2, 10),                  "Fixed address")
+CONFIG_IPV4  (0x1003, NET_NESTED,       16,    ((10, 0), (0, 1)),                "Nested tuple, as a syntax case")
+CONFIG_HOST  (0x1101, TIME_SERVER_1,    17,    "time.example.org",       63,     "Time server 1, name or address (empty: unused)")
+CONFIG_HOST  (0x1102, TIME_SERVER_2,    17,    "",                       63,     "Time server 2, with a comma, and (parentheses)")
+CONFIG_U32   (0x1103, TIME_POLL_S,      17,    64,                  16,  1024,   "Poll interval (s)")
+CONFIG_U32   (0x1104, TIME_LOST_S,      17,    3600,                60,  604800, "Lost after this long without a sample (s)") /* block */
+
+/*            id      name                      label */
+CONFIG_RULE  (0x1001, FIXED_IP_INVALID,         "The fixed address must not be 0.0.0.0")
+CONFIG_RULE  (0x1002, TIME_NO_SERVER,           "At least one time server is needed")

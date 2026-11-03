@@ -1,0 +1,55 @@
+{
+  "name": "def-tables",
+  "displayName": "X-Macro Tables",
+  "description": "Syntax highlighting for X-macro .def tables (config fields, log catalog)",
+  "version": "0.1.0",
+  "publisher": "IYourSunshineI",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "xmacro-def",
+        "aliases": [
+          "X-Macro Table",
+          "xmacro-def"
+        ],
+        "filenamePatterns": [
+          "**/config/tables/*.def"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "xmacro-def",
+        "scopeName": "source.xmacro-def",
+        "path": "./syntaxes/xmacro-def.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "test": "node --test test/*.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/vscode": "~1.90.0",
+    "@vscode/vsce": "^4.1.0",
+    "typescript": "^7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IYourSunshineI/deft.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IYourSunshineI/deft/issues"
+  },
+  "homepage": "https://github.com/IYourSunshineI/deft#readme"
+}

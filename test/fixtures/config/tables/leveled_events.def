@@ -1,0 +1,26 @@
+/**********************************************************************************
+ * Synthetic test fixture: log catalog with the five-column LOG_DEF layout.
+ **********************************************************************************/
+
+/*
+ * Columns of LOG_DEF:
+ *   code   16 bit, unique
+ *   level  DEBUG, INFO, WARNING or ERROR
+ *   data   How DATA is rendered: NONE, U32, I32, HEX, U16x2
+ *   name   Identifier used at the call site
+ *   text   C# composite format string
+ */
+
+#ifndef LEVELED_CATALOG_VERSION
+#define LEVELED_CATALOG_VERSION 1
+#endif
+
+/*            id  name */
+LOG_GROUP_DEF(0,  CORE)
+LOG_GROUP_DEF(2,  RADIO)
+
+/*      code    level    data   name              text */
+LOG_DEF(0x0001, INFO,    U16x2, SYS_BOOT,         "boot, cause {0}, catalog v{1}")
+LOG_DEF(0x0002, WARNING, U32,   SYS_DROPPED,      "{0} records dropped")
+LOG_DEF(0x0201, DEBUG,   HEX,   RADIO_COMMAND,    "command 0x{0} received")
+LOG_DEF(0x0202, ERROR,   NONE,  RADIO_FAILED,     "radio failed")
