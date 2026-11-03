@@ -1,7 +1,7 @@
 {
-  "name": "def-tables",
-  "displayName": "X-Macro Tables",
-  "description": "Syntax highlighting, diagnostics, hover, outline and include links for X-macro .def tables",
+  "name": "deft",
+  "displayName": "Deft",
+  "description": "Deft: syntax highlighting, diagnostics, hover, outline and include links for X-macro .def tables",
   "version": "0.1.0",
   "publisher": "IYourSunshineI",
   "license": "MIT",

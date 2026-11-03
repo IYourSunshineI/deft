@@ -1,6 +1,6 @@
-# X-Macro Tables
+# Deft
 
-Language support for X-macro `.def` table files: one macro call per line, such as
+Deft is language support for X-macro `.def` table files: one macro call per line, such as
 `LOG_DEF(0x0101, INFO, NONE, BootDone, "Boot done")` or `CONFIG_U32(1, Timeout, 2, 30, 1, 600, "Timeout")`.
 
 ## Which files
