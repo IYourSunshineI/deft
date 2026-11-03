@@ -15,8 +15,8 @@
 #include "../../lib/config/tables/base_config_fields.def"
 
 /*               id  name    label */
-CONFIG_GROUP_DEF(16, NETWORK, "Network")   // trailing comment
-CONFIG_GROUP_DEF(17, TIMING,  "Timing")
+CONFIG_GROUP_DEF(16, NETWORK, "Network") // trailing comment
+CONFIG_GROUP_DEF(17, TIMING, "Timing")
 
 /*            id      name              group  default              min  max     label */
 CONFIG_BOOL  (0x1001, NET_AUTO,         16,    1,                                "Take the address automatically; \"fixed\" is the fallback")

@@ -15,13 +15,13 @@
 #include "../../lib/config/tables/base_log_events.def"
 
 /* Group id 7 is reserved. */
-LOG_GROUP_DEF(6,  SENSOR)
-LOG_GROUP_DEF(8,  LINK)
+LOG_GROUP_DEF(6, SENSOR)
+LOG_GROUP_DEF(8, LINK)
 
-LOG_DEF(0x0601, SENSOR_READ,       "sensor {0}: {1} mV, offset {2} us")
-LOG_DEF(0x0602, SENSOR_OFFLINE,    "sensor {0} offline")        // trailing comment
-LOG_DEF(0x0603, SENSOR_BRACES,     "literal {{braces}} and {0:X4}, escaped \" quote, (paren")
+LOG_DEF(0x0601, SENSOR_READ,    "sensor {0}: {1} mV, offset {2} us")
+LOG_DEF(0x0602, SENSOR_OFFLINE, "sensor {0} offline") // trailing comment
+LOG_DEF(0x0603, SENSOR_BRACES,  "literal {{braces}} and {0:X4}, escaped \" quote, (paren")
 
-LOG_DEF(0x0801, LINK_UP,           "link up")
-LOG_DEF(0x0802, LINK_ADDRESS,      "address {0}.{1}.{2}.{3}")
-LOG_DEF  (0x0803, LINK_ALIGNED,    "space before the parenthesis")
+LOG_DEF(0x0801, LINK_UP,      "link up")
+LOG_DEF(0x0802, LINK_ADDRESS, "address {0}.{1}.{2}.{3}")
+LOG_DEF(0x0803, LINK_ALIGNED, "space before the parenthesis")

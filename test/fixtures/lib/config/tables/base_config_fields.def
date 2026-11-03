@@ -28,6 +28,6 @@ CONFIG_TEXT  (0x0002, DEVICE_PLACE,    0,     "",      64,  "Place")
 
 /*            id      name             group  default  label */
 CONFIG_ENUM  (0x0101, LOG_LEVEL,       1,     INFO,    "Lowest level that is kept")
-CONFIG_OPTION(LOG_LEVEL, 0, DEBUG,   "Debug")
-CONFIG_OPTION(LOG_LEVEL, 1, INFO,    "Info")
-CONFIG_OPTION(LOG_LEVEL, 2, ERROR,   "Error")
+CONFIG_OPTION(LOG_LEVEL, 0, DEBUG, "Debug")
+CONFIG_OPTION(LOG_LEVEL, 1, INFO,  "Info")
+CONFIG_OPTION(LOG_LEVEL, 2, ERROR, "Error")

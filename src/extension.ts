@@ -8,6 +8,8 @@ import { describe, locate, outline } from './navigate.ts';
 import type { OutlineNode } from './navigate.ts';
 import { findUses, lookupName, nameIndex, refsToRow, resolveRef } from './index.ts';
 import type { Loc, TableFile } from './index.ts';
+import { formatEdits } from './layout.ts';
+import { legend, semanticTokens } from './semantic.ts';
 import schema from './schema.json';
 
 const LANG = 'xmacro-def';
@@ -34,6 +36,13 @@ async function tables(): Promise<TableFile[]> {
   for (const d of vscode.workspace.textDocuments) if (d.languageId === LANG) uris.set(d.uri.toString(), d.uri);
   return Promise.all([...uris].map(async ([uri, u]) => ({ uri, doc: parse(await textOf(u), schema as unknown as Schema) })));
 }
+
+const semLegend = new vscode.SemanticTokensLegend(legend.types, legend.modifiers);
+// a changed row only needs its own line replaced; a range formats the lines it touches
+const edits = (d: vscode.TextDocument, r?: vscode.Range) =>
+  formatEdits(d.getText(), schema as unknown as Schema)
+    .filter(e => !r || (e.line >= r.start.line && e.line <= r.end.line))
+    .map(e => vscode.TextEdit.replace(d.lineAt(e.line).range, e.text));
 
 export function activate(ctx: vscode.ExtensionContext) {
   const diags = vscode.languages.createDiagnosticCollection(LANG);
@@ -110,6 +119,17 @@ export function activate(ctx: vscode.ExtensionContext) {
         }
         return out;
       },
+    }),
+    vscode.languages.registerDocumentSemanticTokensProvider(sel, {
+      provideDocumentSemanticTokens(d) {
+        const b = new vscode.SemanticTokensBuilder(semLegend);
+        for (const t of semanticTokens(parseDoc(d))) b.push(range(t.line, t.start, t.start + t.length), t.type, t.modifiers);
+        return b.build();
+      },
+    }, semLegend),
+    vscode.languages.registerDocumentFormattingEditProvider(sel, { provideDocumentFormattingEdits: d => edits(d) }),
+    vscode.languages.registerDocumentRangeFormattingEditProvider(sel, {
+      provideDocumentRangeFormattingEdits: (d, r) => edits(d, r),
     }),
     vscode.languages.registerDocumentLinkProvider(sel, {
       provideDocumentLinks(d) {

@@ -15,6 +15,8 @@ Files matching `**/config/tables/*.def` get the language `xmacro-def` automatica
 ## Features
 
 - **Syntax highlighting** for macro names, numbers, strings, `{0}` format placeholders, directives and comments.
+- **Semantic highlighting** by column role, taken from the schema: defining ids (`number`, declaration), defined names (`variable`, declaration, readonly), references to other rows (`type`), fixed-choice values (`enumMember`), format strings with their `{n}` placeholders (`string` / `parameter`). Standard token types only, so every theme colours them; columns without a clear role keep the grammar's colours.
+- **Format Document / Format Selection** aligns the columns of rows. A one-line header comment above a block (`/*  id   name   label */`) is the grid: each argument starts under the word of its column name, so rows with different layouts share one grid and the macro name is padded so `(` sits just before the first column. Without such a header, consecutive rows are aligned among themselves. Only whitespace changes; rows with errors, comments and directives are left alone; trailing comments line up.
 - **Diagnostics** while you type: wrong argument count, wrong types or ranges, unterminated strings,
   duplicate ids and names, references to undefined groups, bad format placeholders, unreadable `#include` files.
   Lines that are not a row, directive or comment are reported as warnings.
