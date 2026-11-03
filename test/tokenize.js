@@ -37,7 +37,7 @@ const reg = new tm.Registry({
       if (!inBlock && st.depth > 1) fail(`${where} rule stack leaks: ${st}`);
       if (wasBlock) return;
       const has = (text, scope) => r.tokens.some(t => line.slice(t.startIndex, t.endIndex).trim() === text && t.scopes.some(s => s.startsWith(scope)));
-      const m = /^\s*([A-Z][A-Z0-9_]*)\s*\(\s*(0[xX][0-9A-Fa-f]+|\d+)/.exec(line);
+      const m = /^\s*([A-Za-z_]\w*)\s*\(\s*(0[xX][0-9A-Fa-f]+|\d+)/.exec(line);
       if (m) {
         if (!has(m[1], 'entity.name.function')) fail(`${where} macro name not scoped`);
         if (!has(m[2], 'constant.numeric.id')) fail(`${where} id not scoped`);

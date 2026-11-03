@@ -2,8 +2,9 @@
 
 ## 0.1.0
 
-- Version-bump reminder: warning on the `#define ..._VERSION` line when rows changed since git HEAD but the version value did not.
-- Semantic highlighting by schema column role (definitions, references, fixed values, format placeholders).
-- Format Document / Format Selection: aligns row columns to the header comment above the block, or among consecutive rows.
-- Go to Definition from C/C++ to table rows (exact or `PREFIX_`-prefixed names), Find References from a row to C/C++ uses and referencing rows, Go to Definition for reference columns inside tables.
-- Syntax highlighting, diagnostics, hover, document outline and `#include` links for X-macro `.def` tables.
+- Works for any X-macro table: a row is any line `MACRO(arg, arg, ...)`; everything else is ignored. Other `.def` files (linker module definitions) get no diagnostics.
+- Syntax highlighting, with colors for macro, id, name, number, string and placeholder configurable in `deft.colors.*`.
+- Diagnostics per macro, also against one `#include` level: duplicate ids (error, numeric first argument) and names (warning, per owner when the first argument is not a number), unterminated strings and rows, inconsistent argument counts, unreadable includes.
+- Hover with the argument position and the column name from a header comment (`/* id name label */`), flat outline of rows, `#include` links.
+- Format Document / Format Selection: aligns row columns to the header comment above the block (also rows with blank columns), or among consecutive rows.
+- Go to Definition from C/C++ to table rows (exact or `PREFIX_`-prefixed names) and Find References from a row name to C/C++ uses.

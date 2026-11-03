@@ -20,7 +20,7 @@ CONFIG_GROUP_DEF(17, TIMING, "Timing")
 
 /*            id      name              group  default              min  max     label */
 CONFIG_BOOL  (0x1001, NET_AUTO,         16,    1,                                "Take the address automatically; \"fixed\" is the fallback")
-CONFIG_IPV4  (0x1002, NET_FIXED_IP,     16,    (192, 0, 2, 10),                  "Fixed address")
+CONFIG_IPV4  (0x1002, NET_FIXED_IP,     16,  (192, 0, 2, 10),                  "Fixed address")
 CONFIG_IPV4  (0x1003, NET_NESTED,       16,    ((10, 0), (0, 1)),                "Nested tuple, as a syntax case")
 CONFIG_HOST  (0x1101, TIME_SERVER_1,    17,    "time.example.org",       63,     "Time server 1, name or address (empty: unused)")
 CONFIG_HOST  (0x1102, TIME_SERVER_2,    17,    "",                       63,     "Time server 2, with a comma, and (parentheses)")

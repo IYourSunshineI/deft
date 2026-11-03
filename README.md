@@ -1,39 +1,53 @@
 # Deft
 
 Deft is language support for X-macro `.def` table files: one macro call per line, such as
-`LOG_DEF(0x0101, INFO, NONE, BootDone, "Boot done")` or `CONFIG_U32(1, Timeout, 2, 30, 1, 600, "Timeout")`.
+`EVENT(0x0101, BootDone, "Boot done")` or `CHANNEL(MOD_A, Screen, 4)`. It works for any macro names and
+any columns.
 
 ## Which files
 
-Files matching `**/config/tables/*.def` get the language `xmacro-def` automatically
-(Windows module-definition `.def` files elsewhere are left alone). To use it for other paths:
+Files with the extension `.def` get the language `xmacro-def`. Lines that are not a row are plain
+text to Deft, so other `.def` files (for example Windows linker module definitions) just show no
+highlighting and no diagnostics.
 
-```json
-"files.associations": { "*.def": "xmacro-def" }
-```
-
-## Features
-
-- **Syntax highlighting** for macro names, numbers, strings, `{0}` format placeholders, directives and comments.
-- **Semantic highlighting** by column role, taken from the schema: defining ids (`number`, declaration), defined names (`variable`, declaration, readonly), references to other rows (`type`), fixed-choice values (`enumMember`), format strings with their `{n}` placeholders (`string` / `parameter`). Standard token types only, so every theme colours them; columns without a clear role keep the grammar's colours.
-- **Format Document / Format Selection** aligns the columns of rows. A one-line header comment above a block (`/*  id   name   label */`) is the grid: each argument starts under the word of its column name, so rows with different layouts share one grid and the macro name is padded so `(` sits just before the first column. Without such a header, consecutive rows are aligned among themselves. Only whitespace changes; rows with errors, comments and directives are left alone; trailing comments line up.
-- **Diagnostics** while you type: wrong argument count, wrong types or ranges, unterminated strings,
-  duplicate ids and names, references to undefined groups, bad format placeholders, unreadable `#include` files.
-  Lines that are not a row, directive or comment are reported as warnings.
-- **Hover** on an argument shows its column; on a macro name shows its columns; on a `{n}` placeholder shows the argument index.
-- **Outline / breadcrumbs / Go to Symbol**: groups with their rows nested below.
-- **Go to Definition / Find References between C/C++ and tables**: in a `c`/`cpp` file, Go to Definition on a name that a table row defines (its label column, e.g. the event name) jumps to that row. A prefixed use such as `PREFIX_Name` matches too (longest `_`-suffix that is a table name); names not in any table are left to other providers. In a table, Find References on a row name lists its whole-word (optionally prefixed) uses in `*.c, *.cc, *.cpp, *.cxx, *.h, *.hh, *.hpp, *.hxx` (excluding `node_modules`, `build`, `out`) plus rows in other tables that reference it; Go to Definition on a reference column (e.g. a group id) jumps to the defining row. Tables are the `**/config/tables/*.def` files of the workspace; C/C++ is scanned only on request.
-- **Version-bump reminder**: if a table has a `#define ..._VERSION N` and its rows (macro and arguments; whitespace and comments ignored, so formatting never triggers it) differ from the committed version (git HEAD) while N is unchanged, the define gets a warning. Uses the `git` executable; untracked files or no git mean no warning. HEAD is re-read on open, save and window focus.
-- **`#include "file.def"`** paths are clickable; included tables are used to resolve references.
-
-## Expected format
+## The table format
 
 ```
 // line comment, /* block comment */
 #include "other.def"
-#define NAME value
-MACRO_NAME(arg1, arg2, "string, with commas", (tuple, of, values))
+/*  id      name    label */
+MACRO_NAME(0x0101, Boot, "string, with commas", (tuple, of, values))
 ```
 
-Each row is a single line. The known macros and their columns are defined in `schema.json`
-inside the extension; unknown macros are highlighted but not checked.
+- A **row** is a line `MACRO_NAME(arg, arg, ...)`: an identifier at the start of the line followed by `(`.
+  Arguments are split at top-level commas; strings and nested parentheses are respected. A row is a single line.
+- The **id** of a row is its first argument. Numbers compare numerically (`0x10` equals `16`), anything else by text.
+- The **name** of a row is the argument under a header word `name` (see below) if that is an identifier, else the first argument after the id that is a plain identifier, if there is one.
+- A **header** is a one-line comment whose words are all identifiers (`/*  id  name  label */`) above a block of rows. It names the columns by position; prose comments are never headers.
+- Everything else (comments, directives, blank lines, any other text) is ignored and never reported.
+
+## Features
+
+- **Syntax highlighting** for macro names, ids, numbers, strings, `{0}` placeholders, directives and comments.
+- **Colors from settings**: `deft.colors.*` (below) recolor macro names, ids, names, numbers, strings and placeholders without a theme change.
+- **Diagnostics** while you type, per macro, within the file and one `#include` level deep:
+  duplicate ids (error, for rows whose first argument is a number) and duplicate names (warning; for rows whose first argument is not a number, such as `OPTION(LEVEL, 0, DEBUG)`, that argument is an owner and names are unique per owner), unterminated strings and rows (error),
+  rows with an argument count that differs from the usual one of their macro (warning), unreadable `#include` files (warning).
+- **Hover** on an argument shows its position and, if the header comment has a word there, its column name; on a macro name it shows the header and the argument count.
+- **Outline / breadcrumbs / Go to Symbol**: a flat list of rows, labelled by name (or id), with the macro as detail.
+- **Format Document / Format Selection** aligns the columns of rows. A row with as many arguments as the header above it has words is placed under the header words, with `(` just before the first. A row with fewer arguments stays on the grid if each argument already sits under a header word (blank columns are allowed). Any other row is aligned with its consecutive neighbours. Only whitespace changes; rows with syntax errors, comments and directives are left alone; trailing comments line up.
+- **Go to Definition / Find References between C/C++ and tables**: in a `c`/`cpp` file, Go to Definition on a name that a row defines jumps to that row. A prefixed use such as `PREFIX_Name` matches too (longest `_`-suffix that is a table name); other names are left to other providers. In a table, Find References on a row name lists its whole-word (optionally prefixed) uses in `*.c, *.cc, *.cpp, *.cxx, *.h, *.hh, *.hpp, *.hxx` (excluding `node_modules`, `build`, `out`). Tables are all `**/*.def` files of the workspace; C/C++ is scanned only on request.
+- **`#include "file.def"`** paths are clickable.
+
+## Settings
+
+Under Settings, Extensions, Deft. Each takes a color like `#E06C75`; empty (the default) uses the theme.
+
+| Setting | Colors |
+| --- | --- |
+| `deft.colors.macro` | macro name |
+| `deft.colors.id` | id, the first argument |
+| `deft.colors.name` | name, the first identifier after the id |
+| `deft.colors.number` | other numbers, also inside tuples |
+| `deft.colors.string` | strings |
+| `deft.colors.placeholder` | `{n}` placeholders inside strings |

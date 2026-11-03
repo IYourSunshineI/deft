@@ -21,7 +21,7 @@
       }
     },
     "row": {
-      "begin": "^\\s*([A-Z][A-Z0-9_]*)\\s*(\\()",
+      "begin": "^\\s*([A-Za-z_]\\w*)\\s*(\\()",
       "beginCaptures": {
         "1": { "name": "entity.name.function.preprocessor.xmacro-def" },
         "2": { "name": "punctuation.section.arguments.begin.xmacro-def" }

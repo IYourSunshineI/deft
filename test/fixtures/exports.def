@@ -1,0 +1,6 @@
+LIBRARY demo
+EXPORTS
+  Foo @1
+  Bar @2 NONAME
+  Baz = Impl
+; a comment

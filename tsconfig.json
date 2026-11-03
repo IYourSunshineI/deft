@@ -6,7 +6,6 @@
     "strict": true,
     "rewriteRelativeImportExtensions": true,
     "erasableSyntaxOnly": true,
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"],
     "rootDir": "src",

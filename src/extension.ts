@@ -1,26 +1,21 @@
 import * as vscode from 'vscode';
 import { readFileSync } from 'node:fs';
-import { execFile } from 'node:child_process';
-import { basename, dirname, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { parse } from './parser.ts';
-import type { Schema } from './parser.ts';
 import { check } from './checks.ts';
-import { describe, locate, outline } from './navigate.ts';
-import type { OutlineNode } from './navigate.ts';
-import { findUses, lookupName, nameIndex, refsToRow, resolveRef } from './index.ts';
+import { describe, locate } from './navigate.ts';
+import { findUses, lookupName, nameIndex } from './index.ts';
 import type { Loc, TableFile } from './index.ts';
 import { formatEdits } from './layout.ts';
-import { versionReminder } from './version.ts';
-import { legend, semanticTokens } from './semantic.ts';
-import schema from './schema.json';
+import { colorRanges, roles } from './colors.ts';
+import type { Role } from './colors.ts';
 
 const LANG = 'xmacro-def';
 const sel: vscode.DocumentSelector = { language: LANG };
-const parseDoc = (d: vscode.TextDocument) => parse(d.getText(), schema as unknown as Schema);
+const parseDoc = (d: vscode.TextDocument) => parse(d.getText());
 const range = (line: number, s: number, e: number) => new vscode.Range(line, s, line, e);
+const isDef = (d: vscode.TextDocument) => d.languageId === LANG;
 
-
-const TABLES = '**/config/tables/*.def';
 const CODE = '**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx}';
 const SKIP = '**/{node_modules,build,out,.git}/**';
 const decoder = new TextDecoder();
@@ -34,72 +29,67 @@ const toLoc = (l: Loc) => new vscode.Location(vscode.Uri.parse(l.uri), range(l.l
 // Rebuilt on every request: tables are small and this is always fresh (open documents win over disk).
 async function tables(): Promise<TableFile[]> {
   const uris = new Map<string, vscode.Uri>();
-  for (const u of await vscode.workspace.findFiles(TABLES, SKIP)) uris.set(u.toString(), u);
-  for (const d of vscode.workspace.textDocuments) if (d.languageId === LANG) uris.set(d.uri.toString(), d.uri);
-  return Promise.all([...uris].map(async ([uri, u]) => ({ uri, doc: parse(await textOf(u), schema as unknown as Schema) })));
+  for (const u of await vscode.workspace.findFiles('**/*.def', SKIP)) uris.set(u.toString(), u);
+  for (const d of vscode.workspace.textDocuments) if (isDef(d)) uris.set(d.uri.toString(), d.uri);
+  return Promise.all([...uris].map(async ([uri, u]) => ({ uri, doc: parse(await textOf(u)) })));
 }
 
-const semLegend = new vscode.SemanticTokensLegend(legend.types, legend.modifiers);
 // a changed row only needs its own line replaced; a range formats the lines it touches
 const edits = (d: vscode.TextDocument, r?: vscode.Range) =>
-  formatEdits(d.getText(), schema as unknown as Schema)
+  formatEdits(d.getText())
     .filter(e => !r || (e.line >= r.start.line && e.line <= r.end.line))
     .map(e => vscode.TextEdit.replace(d.lineAt(e.line).range, e.text));
 
 export function activate(ctx: vscode.ExtensionContext) {
   const diags = vscode.languages.createDiagnosticCollection(LANG);
-  const isDef = (d: vscode.TextDocument) => d.languageId === LANG;
 
   const readFile = (p: string) => {
     const open = vscode.workspace.textDocuments.find(d => isDef(d) && d.uri.scheme === 'file' && d.uri.fsPath === p);
     if (open) return open.getText();
     try { return readFileSync(p, 'utf8'); } catch { return undefined; }
   };
-  // HEAD text per file, fetched async via git (undefined: untracked / no git). Refreshed on open, save and window focus.
-  const head = new Map<string, string>();
-  const loadHead = (d: vscode.TextDocument) => {
-    if (d.uri.scheme !== 'file') return;
-    const p = d.uri.fsPath;
-    execFile('git', ['show', 'HEAD:./' + basename(p)], { cwd: dirname(p), maxBuffer: 1 << 26 }, (err, out) => {
-      if (err) head.delete(p); else head.set(p, out);
-      run(d);
-    });
-  };
   const run = (d: vscode.TextDocument) => {
-    const file = d.uri.scheme === 'file';
-    const res = check(parseDoc(d), file ? { filePath: d.uri.fsPath, readFile } : {});
-    const old = file ? head.get(d.uri.fsPath) : undefined;
-    const bump = old === undefined ? undefined : versionReminder(old, d.getText(), schema as unknown as Schema);
-    diags.set(d.uri, (bump ? [...res, bump] : res).map(x => {
+    const res = check(parseDoc(d), d.uri.scheme === 'file' ? { filePath: d.uri.fsPath, readFile } : {});
+    diags.set(d.uri, res.map(x => {
       const dg = new vscode.Diagnostic(range(x.line, x.start, x.end), x.message,
         x.severity === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning);
       dg.source = LANG;
       return dg;
     }));
   };
-  const loadAll = () => vscode.workspace.textDocuments.filter(isDef).forEach(loadHead);
   // a change in one table can affect others (includer/included): re-check all open ones
   const runAll = () => vscode.workspace.textDocuments.filter(isDef).forEach(run);
   runAll();
-  loadAll();
 
-  const sym = (n: OutlineNode): vscode.DocumentSymbol => {
-    const a = n.row.args.find(a => a.column === n.row.spec?.label) ?? n.row.args[0];
-    const s = new vscode.DocumentSymbol(n.label, n.row.macro,
-      n.children.length ? vscode.SymbolKind.Namespace : vscode.SymbolKind.Constant,
-      range(n.row.line, n.row.macroStart, n.row.end),
-      a ? range(n.row.line, a.start, a.end) : range(n.row.line, n.row.macroStart, n.row.macroEnd));
-    s.children = n.children.map(sym);
-    return s;
+  // deft.colors.*: one decoration type per non-empty setting, applied from the parser's ranges
+  let types = new Map<Role, vscode.TextEditorDecorationType>();
+  const paint = () => {
+    for (const e of vscode.window.visibleTextEditors) {
+      if (!isDef(e.document)) continue;
+      const found = colorRanges(parseDoc(e.document));
+      for (const [role, t] of types) e.setDecorations(t, found.filter(c => c.role === role).map(c => range(c.line, c.start, c.end)));
+    }
   };
+  const recolor = () => {
+    types.forEach(t => t.dispose());
+    types = new Map();
+    const cfg = vscode.workspace.getConfiguration('deft.colors');
+    for (const role of roles) {
+      const color = cfg.get<string>(role);
+      if (color) types.set(role, vscode.window.createTextEditorDecorationType({ color }));
+    }
+    paint();
+  };
+  recolor();
 
   ctx.subscriptions.push(
     diags,
-    vscode.workspace.onDidOpenTextDocument(d => { if (isDef(d)) { runAll(); loadHead(d); } }),
-    vscode.workspace.onDidSaveTextDocument(d => isDef(d) && loadHead(d)),
-    vscode.window.onDidChangeWindowState(w => w.focused && loadAll()),
-    vscode.workspace.onDidChangeTextDocument(e => isDef(e.document) && runAll()),
+    { dispose: () => types.forEach(t => t.dispose()) },
+    vscode.workspace.onDidOpenTextDocument(d => isDef(d) && runAll()),
+    vscode.workspace.onDidChangeTextDocument(e => { if (isDef(e.document)) { runAll(); paint(); } }),
     vscode.workspace.onDidCloseTextDocument(d => { if (isDef(d)) { diags.delete(d.uri); runAll(); } }),
+    vscode.window.onDidChangeVisibleTextEditors(paint),
+    vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration('deft.colors') && recolor()),
     vscode.languages.registerHoverProvider(sel, {
       provideHover(d, pos) {
         const l = locate(parseDoc(d), pos.line, pos.character);
@@ -107,7 +97,11 @@ export function activate(ctx: vscode.ExtensionContext) {
       },
     }),
     vscode.languages.registerDocumentSymbolProvider(sel, {
-      provideDocumentSymbols: d => outline(parseDoc(d)).map(sym),
+      provideDocumentSymbols: d => parseDoc(d).rows.map(r => {
+        const a = r.name ?? r.id;
+        return new vscode.DocumentSymbol(a?.text ?? r.macro, r.macro, vscode.SymbolKind.Constant,
+          range(r.line, r.macroStart, r.end), a ? range(r.line, a.start, a.end) : range(r.line, r.macroStart, r.macroEnd));
+      }),
     }),
     // C/C++ -> table row. Only names found in a table answer; everything else is left to other providers.
     vscode.languages.registerDefinitionProvider(['c', 'cpp'], {
@@ -118,33 +112,19 @@ export function activate(ctx: vscode.ExtensionContext) {
         return hits.length ? hits.map(toLoc) : undefined;
       },
     }),
-    // inside a table: ref column -> defining row
-    vscode.languages.registerDefinitionProvider(sel, {
-      async provideDefinition(d, pos) {
-        const l = locate(parseDoc(d), pos.line, pos.character);
-        const hits = l?.arg ? resolveRef(await tables(), l.row, l.arg) : [];
-        return hits.length ? hits.map(toLoc) : undefined;
-      },
-    }),
-    // table row name -> uses in C/C++ and in other tables
+    // table row name -> uses in C/C++
     vscode.languages.registerReferenceProvider(sel, {
       async provideReferences(d, pos) {
         const l = locate(parseDoc(d), pos.line, pos.character);
-        if (!l?.arg || !l.row.mapped || l.column !== l.row.spec?.label) return;
-        const out = refsToRow(await tables(), l.row).map(toLoc);
+        const n = l?.row.name;
+        if (!l || !n || l.row.args[l.arg ?? -1] !== n) return;
+        const out: vscode.Location[] = [];
         for (const u of await vscode.workspace.findFiles(CODE, SKIP)) {
-          for (const r of findUses(await textOf(u), l.arg.text)) out.push(new vscode.Location(u, range(r.line, r.start, r.end)));
+          for (const r of findUses(await textOf(u), n.text)) out.push(new vscode.Location(u, range(r.line, r.start, r.end)));
         }
         return out;
       },
     }),
-    vscode.languages.registerDocumentSemanticTokensProvider(sel, {
-      provideDocumentSemanticTokens(d) {
-        const b = new vscode.SemanticTokensBuilder(semLegend);
-        for (const t of semanticTokens(parseDoc(d))) b.push(range(t.line, t.start, t.start + t.length), t.type, t.modifiers);
-        return b.build();
-      },
-    }, semLegend),
     vscode.languages.registerDocumentFormattingEditProvider(sel, { provideDocumentFormattingEdits: d => edits(d) }),
     vscode.languages.registerDocumentRangeFormattingEditProvider(sel, {
       provideDocumentRangeFormattingEdits: (d, r) => edits(d, r),

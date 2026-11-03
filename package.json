@@ -1,12 +1,13 @@
 {
   "name": "deft",
   "displayName": "Deft",
-  "description": "Deft: syntax highlighting, diagnostics, hover, outline and include links for X-macro .def tables",
+  "description": "Deft: highlighting, diagnostics, hover, outline, formatting and C/C++ navigation for X-macro .def tables",
   "version": "0.1.0",
   "publisher": "IYourSunshineI",
   "license": "MIT",
   "main": "./out/extension.js",
   "activationEvents": [
+    "onLanguage:xmacro-def",
     "onLanguage:c",
     "onLanguage:cpp"
   ],
@@ -24,10 +25,10 @@
           "X-Macro Table",
           "xmacro-def"
         ],
-        "filenamePatterns": [
-          "**/config/tables/*.def"
-        ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "extensions": [
+          ".def"
+        ]
       }
     ],
     "grammars": [
@@ -36,7 +37,60 @@
         "scopeName": "source.xmacro-def",
         "path": "./syntaxes/xmacro-def.tmLanguage.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Deft",
+      "properties": {
+        "deft.colors.macro": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 0,
+          "markdownDescription": "Color of the macro name in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.id": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 1,
+          "markdownDescription": "Color of the id (first argument) in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.name": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 2,
+          "markdownDescription": "Color of the name (first identifier after the id) in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.number": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 3,
+          "markdownDescription": "Color of the numbers in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.string": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 4,
+          "markdownDescription": "Color of the strings in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.placeholder": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
+          "default": "",
+          "order": 5,
+          "markdownDescription": "Color of the {n} placeholders in strings in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        }
+      }
+    }
   },
   "scripts": {
     "compile": "tsc -p .",
