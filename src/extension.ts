@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { execFile } from 'node:child_process';
+import { basename, dirname, resolve } from 'node:path';
 import { parse } from './parser.ts';
 import type { Schema } from './parser.ts';
 import { check } from './checks.ts';
@@ -9,6 +10,7 @@ import type { OutlineNode } from './navigate.ts';
 import { findUses, lookupName, nameIndex, refsToRow, resolveRef } from './index.ts';
 import type { Loc, TableFile } from './index.ts';
 import { formatEdits } from './layout.ts';
+import { versionReminder } from './version.ts';
 import { legend, semanticTokens } from './semantic.ts';
 import schema from './schema.json';
 
@@ -53,19 +55,33 @@ export function activate(ctx: vscode.ExtensionContext) {
     if (open) return open.getText();
     try { return readFileSync(p, 'utf8'); } catch { return undefined; }
   };
+  // HEAD text per file, fetched async via git (undefined: untracked / no git). Refreshed on open, save and window focus.
+  const head = new Map<string, string>();
+  const loadHead = (d: vscode.TextDocument) => {
+    if (d.uri.scheme !== 'file') return;
+    const p = d.uri.fsPath;
+    execFile('git', ['show', 'HEAD:./' + basename(p)], { cwd: dirname(p), maxBuffer: 1 << 26 }, (err, out) => {
+      if (err) head.delete(p); else head.set(p, out);
+      run(d);
+    });
+  };
   const run = (d: vscode.TextDocument) => {
     const file = d.uri.scheme === 'file';
     const res = check(parseDoc(d), file ? { filePath: d.uri.fsPath, readFile } : {});
-    diags.set(d.uri, res.map(x => {
+    const old = file ? head.get(d.uri.fsPath) : undefined;
+    const bump = old === undefined ? undefined : versionReminder(old, d.getText(), schema as unknown as Schema);
+    diags.set(d.uri, (bump ? [...res, bump] : res).map(x => {
       const dg = new vscode.Diagnostic(range(x.line, x.start, x.end), x.message,
         x.severity === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning);
       dg.source = LANG;
       return dg;
     }));
   };
+  const loadAll = () => vscode.workspace.textDocuments.filter(isDef).forEach(loadHead);
   // a change in one table can affect others (includer/included): re-check all open ones
   const runAll = () => vscode.workspace.textDocuments.filter(isDef).forEach(run);
   runAll();
+  loadAll();
 
   const sym = (n: OutlineNode): vscode.DocumentSymbol => {
     const a = n.row.args.find(a => a.column === n.row.spec?.label) ?? n.row.args[0];
@@ -79,7 +95,9 @@ export function activate(ctx: vscode.ExtensionContext) {
 
   ctx.subscriptions.push(
     diags,
-    vscode.workspace.onDidOpenTextDocument(d => isDef(d) && runAll()),
+    vscode.workspace.onDidOpenTextDocument(d => { if (isDef(d)) { runAll(); loadHead(d); } }),
+    vscode.workspace.onDidSaveTextDocument(d => isDef(d) && loadHead(d)),
+    vscode.window.onDidChangeWindowState(w => w.focused && loadAll()),
     vscode.workspace.onDidChangeTextDocument(e => isDef(e.document) && runAll()),
     vscode.workspace.onDidCloseTextDocument(d => { if (isDef(d)) { diags.delete(d.uri); runAll(); } }),
     vscode.languages.registerHoverProvider(sel, {

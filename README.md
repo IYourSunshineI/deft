@@ -23,6 +23,7 @@ Files matching `**/config/tables/*.def` get the language `xmacro-def` automatica
 - **Hover** on an argument shows its column; on a macro name shows its columns; on a `{n}` placeholder shows the argument index.
 - **Outline / breadcrumbs / Go to Symbol**: groups with their rows nested below.
 - **Go to Definition / Find References between C/C++ and tables**: in a `c`/`cpp` file, Go to Definition on a name that a table row defines (its label column, e.g. the event name) jumps to that row. A prefixed use such as `PREFIX_Name` matches too (longest `_`-suffix that is a table name); names not in any table are left to other providers. In a table, Find References on a row name lists its whole-word (optionally prefixed) uses in `*.c, *.cc, *.cpp, *.cxx, *.h, *.hh, *.hpp, *.hxx` (excluding `node_modules`, `build`, `out`) plus rows in other tables that reference it; Go to Definition on a reference column (e.g. a group id) jumps to the defining row. Tables are the `**/config/tables/*.def` files of the workspace; C/C++ is scanned only on request.
+- **Version-bump reminder**: if a table has a `#define ..._VERSION N` and its rows (macro and arguments; whitespace and comments ignored, so formatting never triggers it) differ from the committed version (git HEAD) while N is unchanged, the define gets a warning. Uses the `git` executable; untracked files or no git mean no warning. HEAD is re-read on open, save and window focus.
 - **`#include "file.def"`** paths are clickable; included tables are used to resolve references.
 
 ## Expected format
