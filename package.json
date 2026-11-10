@@ -1,8 +1,8 @@
 {
-  "name": "deft",
-  "displayName": "Deft",
+  "name": "deft-xmacro",
+  "displayName": "Deft X-Macro",
   "description": "Deft: highlighting, diagnostics, hover, outline, formatting and C/C++ navigation for X-macro .def tables",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "IYourSunshineI",
   "license": "MIT",
   "icon": "images/icon.png",
