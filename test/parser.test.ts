@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parse } from '../src/parser.ts';
 import { colorRanges } from '../src/colors.ts';
 import { describe, locate } from '../src/navigate.ts';
-import { findUses, lookupName, nameIndex } from '../src/index.ts';
+import { findNames, findUses, lookupName, nameIndex } from '../src/index.ts';
 
 test('args: ranges, strings with commas/parens/escapes, tuples; id and name', () => {
   const t = 'CONFIG_IPV4  (0x1002, N, 16, (192, 168, 90, 5), "a, b) \\" c")  // tail';
@@ -86,4 +86,10 @@ test('name index and lookup', () => {
 test('findUses: whole word, optional prefix', () => {
   const u = findUses('LOG(INFO, LinkUp);\nx = EVT_ID_LinkUp; LinkUpX; aLinkUp;', 'LinkUp');
   assert.deepEqual(u.map(x => [x.line, x.start]), [[0, 10], [1, 4]]);
+});
+
+test('findNames: exact and prefixed hit, substrings and non-names do not', () => {
+  const idx = nameIndex([{ uri: 'a', doc: parse('E(1, LinkUp, "up")') }]);
+  const n = findNames('LOG(LinkUp, EVT_LinkUp, MyLinkUp, printf);', idx);
+  assert.deepEqual(n.map(x => x.start), [4, 12]);
 });

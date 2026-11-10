@@ -36,18 +36,19 @@ MACRO_NAME(0x0101, Boot, "string, with commas", (tuple, of, values))
 - **Hover** on an argument shows its position and, if the header comment has a word there, its column name; on a macro name it shows the header and the argument count.
 - **Outline / breadcrumbs / Go to Symbol**: a flat list of rows, labelled by name (or id), with the macro as detail.
 - **Format Document / Format Selection** aligns the columns of rows. A row with as many arguments as the header above it has words is placed under the header words, with `(` just before the first. A row with fewer arguments stays on the grid if each argument already sits under a header word (blank columns are allowed). Any other row is aligned with its consecutive neighbours. Only whitespace changes; rows with syntax errors, comments and directives are left alone; trailing comments line up.
-- **Go to Definition / Find References between C/C++ and tables**: in a `c`/`cpp` file, Go to Definition on a name that a row defines jumps to that row. A prefixed use such as `PREFIX_Name` matches too (longest `_`-suffix that is a table name); other names are left to other providers. In a table, Find References on a row name lists its whole-word (optionally prefixed) uses in `*.c, *.cc, *.cpp, *.cxx, *.h, *.hh, *.hpp, *.hxx` (excluding `node_modules`, `build`, `out`). Tables are all `**/*.def` files of the workspace; C/C++ is scanned only on request.
+- **Highlighting and Go to Definition in any file, Find References from tables**: in any file other than a table, names that a row defines are colored (`deft.colors.use`) and Go to Definition jumps to that row. A prefixed use such as `PREFIX_Name` matches too (longest `_`-suffix that is a table name); other names are left to other providers. In a table, Find References on a row name lists its whole-word (optionally prefixed) uses in `*.c, *.cc, *.cpp, *.cxx, *.h, *.hh, *.hpp, *.hxx` (excluding `node_modules`, `build`, `out`). Tables are all `**/*.def` files of the workspace; C/C++ is scanned only on request.
 - **`#include "file.def"`** paths are clickable.
 
 ## Settings
 
-Under Settings, Extensions, Deft. Each takes a color like `#E06C75`; empty (the default) uses the theme.
+Under Settings, Extensions, Deft. Each takes a color like `#E06C75`; empty uses the theme (`use`: no highlighting).
 
-| Setting | Colors |
-| --- | --- |
-| `deft.colors.macro` | macro name |
-| `deft.colors.id` | id, the first argument |
-| `deft.colors.name` | name, the first identifier after the id |
-| `deft.colors.number` | other numbers, also inside tuples |
-| `deft.colors.string` | strings |
-| `deft.colors.placeholder` | `{n}` placeholders inside strings |
+| Setting | Colors | Default |
+| --- | --- | --- |
+| `deft.colors.macro` | macro name | `#C586C0` |
+| `deft.colors.id` | id, the first argument | `#569CD6` |
+| `deft.colors.name` | name, the first identifier after the id | `#4EC9B0` |
+| `deft.colors.number` | other numbers, also inside tuples | `#D19A66` |
+| `deft.colors.string` | strings | `#98C379` |
+| `deft.colors.placeholder` | `{n}` placeholders inside strings | `#E06C75` |
+| `deft.colors.use` | table names used in other files; empty turns it off | `#4EC9B0` |

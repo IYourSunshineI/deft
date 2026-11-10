@@ -7,9 +7,7 @@
   "license": "MIT",
   "main": "./out/extension.js",
   "activationEvents": [
-    "onLanguage:xmacro-def",
-    "onLanguage:c",
-    "onLanguage:cpp"
+    "onStartupFinished"
   ],
   "engines": {
     "vscode": "^1.90.0"
@@ -45,7 +43,7 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#C586C0",
           "order": 0,
           "markdownDescription": "Color of the macro name in X-macro tables, as `#RRGGBB`. Empty uses the theme."
         },
@@ -53,7 +51,7 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#569CD6",
           "order": 1,
           "markdownDescription": "Color of the id (first argument) in X-macro tables, as `#RRGGBB`. Empty uses the theme."
         },
@@ -61,7 +59,7 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#4EC9B0",
           "order": 2,
           "markdownDescription": "Color of the name (first identifier after the id) in X-macro tables, as `#RRGGBB`. Empty uses the theme."
         },
@@ -69,7 +67,7 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#D19A66",
           "order": 3,
           "markdownDescription": "Color of the numbers in X-macro tables, as `#RRGGBB`. Empty uses the theme."
         },
@@ -77,7 +75,7 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#98C379",
           "order": 4,
           "markdownDescription": "Color of the strings in X-macro tables, as `#RRGGBB`. Empty uses the theme."
         },
@@ -85,9 +83,17 @@
           "type": "string",
           "pattern": "^(#[0-9a-fA-F]{3,8})?$",
           "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to use the theme.",
-          "default": "",
+          "default": "#E06C75",
           "order": 5,
           "markdownDescription": "Color of the {n} placeholders in strings in X-macro tables, as `#RRGGBB`. Empty uses the theme."
+        },
+        "deft.colors.use": {
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8})?$",
+          "patternErrorMessage": "Use a color like #RRGGBB, or leave empty to turn the highlighting off.",
+          "default": "#4EC9B0",
+          "order": 6,
+          "markdownDescription": "Color of table names used in other files (code), as `#RRGGBB`. Empty turns the highlighting off."
         }
       }
     }

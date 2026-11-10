@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { parse } from './parser.ts';
 import { check } from './checks.ts';
 import { describe, locate } from './navigate.ts';
-import { findUses, lookupName, nameIndex } from './index.ts';
+import { findNames, findUses, lookupName, nameIndex } from './index.ts';
 import type { Loc, TableFile } from './index.ts';
 import { formatEdits } from './layout.ts';
 import { colorRanges, roles } from './colors.ts';
@@ -26,7 +26,7 @@ const textOf = async (u: vscode.Uri) => {
 };
 const toLoc = (l: Loc) => new vscode.Location(vscode.Uri.parse(l.uri), range(l.line, l.start, l.end));
 
-// Rebuilt on every request: tables are small and this is always fresh (open documents win over disk).
+// Tables are small: re-read all of them whenever the cached name index is invalidated (open documents win over disk).
 async function tables(): Promise<TableFile[]> {
   const uris = new Map<string, vscode.Uri>();
   for (const u of await vscode.workspace.findFiles('**/*.def', SKIP)) uris.set(u.toString(), u);
@@ -61,6 +61,20 @@ export function activate(ctx: vscode.ExtensionContext) {
   const runAll = () => vscode.workspace.textDocuments.filter(isDef).forEach(run);
   runAll();
 
+  // one cached name index, dropped when any table changes; code editors are repainted afterwards
+  let cache: Promise<Map<string, Loc[]>> | undefined;
+  const names = () => cache ??= tables().then(nameIndex);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let useType: vscode.TextEditorDecorationType | undefined;
+  const paintUse = async () => {
+    const idx = await names();
+    for (const e of vscode.window.visibleTextEditors) {
+      if (!isDef(e.document) && useType) e.setDecorations(useType, findNames(e.document.getText(), idx).map(r => range(r.line, r.start, r.end)));
+    }
+  };
+  const schedule = () => { clearTimeout(timer); timer = setTimeout(paintUse, 200); };
+  const invalidate = () => { cache = undefined; schedule(); };
+
   // deft.colors.*: one decoration type per non-empty setting, applied from the parser's ranges
   let types = new Map<Role, vscode.TextEditorDecorationType>();
   const paint = () => {
@@ -78,17 +92,24 @@ export function activate(ctx: vscode.ExtensionContext) {
       const color = cfg.get<string>(role);
       if (color) types.set(role, vscode.window.createTextEditorDecorationType({ color }));
     }
+    useType?.dispose();
+    const use = cfg.get<string>('use');
+    useType = use ? vscode.window.createTextEditorDecorationType({ color: use }) : undefined;
     paint();
+    schedule();
   };
   recolor();
+  const watcher = vscode.workspace.createFileSystemWatcher('**/*.def');
 
   ctx.subscriptions.push(
     diags,
-    { dispose: () => types.forEach(t => t.dispose()) },
-    vscode.workspace.onDidOpenTextDocument(d => isDef(d) && runAll()),
-    vscode.workspace.onDidChangeTextDocument(e => { if (isDef(e.document)) { runAll(); paint(); } }),
-    vscode.workspace.onDidCloseTextDocument(d => { if (isDef(d)) { diags.delete(d.uri); runAll(); } }),
-    vscode.window.onDidChangeVisibleTextEditors(paint),
+    { dispose: () => { clearTimeout(timer); types.forEach(t => t.dispose()); useType?.dispose(); } },
+    watcher,
+    watcher.onDidCreate(invalidate), watcher.onDidChange(invalidate), watcher.onDidDelete(invalidate),
+    vscode.workspace.onDidOpenTextDocument(d => { if (isDef(d)) { runAll(); invalidate(); } }),
+    vscode.workspace.onDidChangeTextDocument(e => { if (isDef(e.document)) { runAll(); paint(); invalidate(); } else schedule(); }),
+    vscode.workspace.onDidCloseTextDocument(d => { if (isDef(d)) { diags.delete(d.uri); runAll(); invalidate(); } }),
+    vscode.window.onDidChangeVisibleTextEditors(() => { paint(); schedule(); }),
     vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration('deft.colors') && recolor()),
     vscode.languages.registerHoverProvider(sel, {
       provideHover(d, pos) {
@@ -103,12 +124,12 @@ export function activate(ctx: vscode.ExtensionContext) {
           range(r.line, r.macroStart, r.end), a ? range(r.line, a.start, a.end) : range(r.line, r.macroStart, r.macroEnd));
       }),
     }),
-    // C/C++ -> table row. Only names found in a table answer; everything else is left to other providers.
-    vscode.languages.registerDefinitionProvider(['c', 'cpp'], {
+    // any file -> table row. Only names found in a table answer; everything else is left to other providers.
+    vscode.languages.registerDefinitionProvider([{ scheme: 'file' }, { scheme: 'untitled' }], {
       async provideDefinition(d, pos) {
         const w = d.getWordRangeAtPosition(pos, /[A-Za-z_]\w*/);
         if (!w) return;
-        const hits = lookupName(nameIndex(await tables()), d.getText(w));
+        const hits = lookupName(await names(), d.getText(w));
         return hits.length ? hits.map(toLoc) : undefined;
       },
     }),

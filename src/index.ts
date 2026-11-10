@@ -37,3 +37,12 @@ export function findUses(text: string, name: string): { line: number; start: num
   });
   return out;
 }
+
+/** Ranges of every identifier in text that names a table row (exact or `_`-suffix match). */
+export function findNames(text: string, idx: Map<string, Loc[]>): { line: number; start: number; end: number }[] {
+  const out: { line: number; start: number; end: number }[] = [];
+  text.split(/\r?\n/).forEach((l, line) => {
+    for (const m of l.matchAll(/\b[A-Za-z_]\w*/g)) if (lookupName(idx, m[0]).length) out.push({ line, start: m.index, end: m.index + m[0].length });
+  });
+  return out;
+}
