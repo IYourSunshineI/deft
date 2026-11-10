@@ -1,10 +1,20 @@
 {
-  "name": "deft",
-  "displayName": "Deft",
+  "name": "deft-xmacro",
+  "displayName": "Deft X-Macro",
   "description": "Deft: highlighting, diagnostics, hover, outline, formatting and C/C++ navigation for X-macro .def tables",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "IYourSunshineI",
   "license": "MIT",
+  "icon": "images/icon.png",
+  "keywords": [
+    "x-macro",
+    "xmacro",
+    "def",
+    "c",
+    "cpp",
+    "preprocessor",
+    "table"
+  ],
   "main": "./out/extension.js",
   "activationEvents": [
     "onStartupFinished"
@@ -13,7 +23,9 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Formatters",
+    "Linters"
   ],
   "contributes": {
     "languages": [
@@ -99,6 +111,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p .",
     "test": "node --test test/*.test.ts",
     "package": "vsce package"

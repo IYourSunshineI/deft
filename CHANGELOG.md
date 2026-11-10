@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 1.0.0
 
 - Works for any X-macro table: a row is any line `MACRO(arg, arg, ...)`; everything else is ignored. Other `.def` files (linker module definitions) get no diagnostics.
 - Syntax highlighting, with colors for macro, id, name, number, string and placeholder configurable in `deft.colors.*`.
